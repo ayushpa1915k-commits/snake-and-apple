@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Snake & Apple</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body {
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+        }
+        .game-container {
+            background: #16213e;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 0 5px;
+        }
+        .header h1 {
+            color: #e94560;
+            font-size: 22px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .score-box {
+            background: #0f3460;
+            padding: 6px 16px;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .score-box span {
+            color: #f5c518;
+        }
+        .icon-btn {
+            background: none;
+            border: 2px solid #0f3460;
+            border-radius: 10px;
+            color: #8899aa;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            touch-action: manipulation;
+        }
+        .icon-btn:hover {
+            color: #fff;
+            border-color: #e94560;
+        }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        canvas {
+            background: #0f3460;
+            border-radius: 12px;
+            display: block;
+            width: 100%;
+            max-width: 480px;
+            aspect-ratio: 1/1;
+            image-rendering: pixelated;
+            touch-action: none;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            margin-top: 5px;
+        }
+        .controls .row {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+        .controls button {
+            width: 70px;
+            height: 70px;
+            border: none;
+            border-radius: 16px;
+            background: #0f3460;
+            color: #fff;
+            font-size: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #091a30, 0 6px 12px rgba(0,0,0,0.3);
+            transition: all 0.05s;
+            touch-action: manipulation;
+        }
+        .controls button:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #091a30;
+        }
+        .action-btn {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 12px;
+            background: #e94560;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            touch-action: manipulation;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .action-btn:hover {
+            background: #c73650;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            padding: 20px;
+        }
+        .overlay.show {
+            display: flex;
+        }
+        .overlay-box {
+            background: #16213e;
+            border-radius: 24px;
+            padding: 40px 36px;
+            text-align: center;
+            max-width: 360px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+        .overlay-box h2 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .overlay-box p {
+            color: #ccc;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .overlay-box .final-score {
+            color: #f5c518;
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .lobby {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+        .lobby-title {
+            color: #e94560;
+            font-size: 28px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-top: 5px;
+        }
+        .lobby-subtitle {
+            color: #556677;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: -10px;
+        }
+        .lobby-section-label {
+            color: #8899aa;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 6px;
+        }
+        .skin-grid {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .skin-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 3px solid #0f3460;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            position: relative;
+        }
+        .skin-btn:hover {
+            transform: scale(1.1);
+        }
+        .skin-btn.active {
+            border-color: #e94560;
+            box-shadow: 0 0 16px rgba(233,69,96,0.4);
+        }
+        .skin-btn .preview {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+        }
+        .skin-btn .preview .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
+        }
+        .skin-btn .preview .dot:first-child {
+            width: 12px;
+            height: 12px;
+        }
+        .lobby-speed {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .lobby-speed button {
+            padding: 8px 18px;
+            border: 2px solid #0f3460;
+            border-radius: 12px;
+            background: transparent;
+            color: #8899aa;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s;
+            touch-action: manipulation;
+            text-transform: uppercase;
+        }
+        .lobby-speed button:hover {
+            border-color: #e94560;
+            color: #fff;
+        }
+        .lobby-speed button.active {
+            border-color: #e94560;
+            background: #e94560;
+            color: #fff;
+        }
+        .play-btn {
+            padding: 14px 50px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #e94560, #c73650);
+            color: #fff;
+            font-size: 20px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            touch-action: manipulation;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            box-shadow: 0 6px 20px rgba(233,69,96,0.3);
+            margin: 5px 0;
+        }
+        .play-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(233,69,96,0.5);
+        }
+        .play-btn:active {
+            transform: scale(0.97);
+        }
+        .creator-credit {
+            color: #556677;
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+        .creator-credit span {
+            color: #e94560;
+            font-weight: 700;
+        }
+        .game-area {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+        .game-area.show {
+            display: flex;
+        }
+
+        @media (max-width: 500px) {
+            .game-container { padding: 12px; gap: 8px; }
+            .header h1 { font-size: 18px; }
+            .controls button { width: 60px; height: 60px; font-size: 26px; }
+            .lobby-title { font-size: 22px; }
+            .play-btn { padding: 12px 40px; font-size: 18px; }
+            .skin-btn { width: 48px; height: 48px; }
+            .skin-btn .preview { width: 30px; height: 30px; }
+            .skin-btn .preview .dot { width: 8px; height: 8px; }
+            .skin-btn .preview .dot:first-child { width: 10px; height: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <!-- HEADER (always visible) -->
+    <div class="header">
+        <div class="header-left">
+            <h1>Snake & Apple</h1>
+        </div>
+        <div class="header-right" id="headerRight">
+            <div class="score-box">Score: <span id="score">0</span></div>
+            <button class="icon-btn" id="pauseBtn" aria-label="Pause" style="display:none;">&#10074;&#10074;</button>
+        </div>
+    </div>
+
+    <!-- GAME AREA -->
+    <div class="game-area" id="gameArea">
+        <canvas id="game" width="480" height="480"></canvas>
+        <div class="controls">
+            <div class="row">
+                <button id="btnUp" aria-label="Up">&#9650;</button>
+            </div>
+            <div class="row">
+                <button id="btnLeft" aria-label="Left">&#9664;</button>
+                <button id="btnDown" aria-label="Down">&#9660;</button>
+                <button id="btnRight" aria-label="Right">&#9654;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOBBY -->
+    <div class="lobby" id="lobby">
+        <div class="lobby-title">Snake & Apple</div>
+        <div class="lobby-subtitle">16 x 16 Classic</div>
+
+        <div>
+            <div class="lobby-section-label">Choose Skin</div>
+            <div class="skin-grid" id="skinGrid">
+                <button class="skin-btn active" data-skin="green">
+                    <div class="preview" style="background:#27ae60;"><div class="dot" style="background:#1e8449;"></div><div class="dot" style="background:#2ecc71;"></div></div>
+                </button>
+                <button class="skin-btn" data-skin="blue">
+                    <div class="preview" style="background:#2980b9;"><div class="dot" style="background:#1a5276;"></div><div class="dot" style="background:#3498db;"></div></div>
+                </button>
+                <button class="skin-btn" data-skin="purple">
+                    <div class="preview" style="background:#8e44ad;"><div class="dot" style="background:#5b2c6f;"></div><div class="dot" style="background:#9b59b6;"></div></div>
+                </button>
+                <button class="skin-btn" data-skin="orange">
+                    <div class="preview" style="background:#e67e22;"><div class="dot" style="background:#a04000;"></div><div class="dot" style="background:#f39c12;"></div></div>
+                </button>
+                <button class="skin-btn" data-skin="pink">
+                    <div class="preview" style="background:#e84393;"><div class="dot" style="background:#b71540;"></div><div class="dot" style="background:#fd79a8;"></div></div>
+                </button>
+            </div>
+        </div>
+
+        <div>
+            <div class="lobby-section-label">Speed</div>
+            <div class="lobby-speed" id="lobbySpeed">
+                <button data-speed="300">Slow</button>
+                <button data-speed="200">Normal</button>
+                <button data-speed="130" class="active">Fast</button>
+                <button data-speed="70">Insane</button>
+            </div>
+        </div>
+
+        <button class="play-btn" id="playBtn">&#9654; Play</button>
+        <div class="creator-credit">Created by <span>Ayush Patel</span></div>
+    </div>
+</div>
+
+<div class="overlay" id="winMessage">
+    <div class="overlay-box">
+        <h2 style="color:#f5c518;">&#127881; You Win!</h2>
+        <p>Congratulations! You filled the entire board!</p>
+        <div class="final-score">Score: <span id="winScore">0</span></div>
+        <button class="action-btn" id="winLobby">Lobby</button>
+    </div>
+</div>
+
+<div class="overlay" id="loseMessage">
+    <div class="overlay-box">
+        <h2 style="color:#e94560;">&#128128; Game Over</h2>
+        <p>The snake crashed!</p>
+        <div class="final-score">Score: <span id="loseScore">0</span></div>
+        <button class="action-btn" id="loseLobby">Lobby</button>
+    </div>
+</div>
+
+<div class="overlay" id="pauseMessage">
+    <div class="overlay-box">
+        <h2 style="color:#f5c518;">&#10074;&#10074; Paused</h2>
+        <p>Take a break!</p>
+        <button class="action-btn" id="resumeBtn">&#9654; Resume</button>
+        <br><br>
+        <button class="action-btn" id="pauseLobby" style="background:#0f3460;">Lobby</button>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const GRID = 16;
+        const SIZE = 480;
+        const CELL = SIZE / GRID;
+
+        const SKINS = {
+            green:  { head: '#1e8449', body: '#2ecc71' },
+            blue:   { head: '#1a5276', body: '#3498db' },
+            purple: { head: '#5b2c6f', body: '#9b59b6' },
+            orange: { head: '#a04000', body: '#f39c12' },
+            pink:   { head: '#b71540', body: '#fd79a8' },
+        };
+
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const scoreSpan = document.getElementById('score');
+        const winMessage = document.getElementById('winMessage');
+        const loseMessage = document.getElementById('loseMessage');
+        const pauseMessage = document.getElementById('pauseMessage');
+        const winScore = document.getElementById('winScore');
+        const loseScore = document.getElementById('loseScore');
+        const gameArea = document.getElementById('gameArea');
+        const lobby = document.getElementById('lobby');
+        const pauseBtn = document.getElementById('pauseBtn');
+
+        let snake, direction, nextDirection, food, score, gameOver, won, paused, gameLoop, speed, skin;
+
+        function getSpeed() {
+            const active = document.querySelector('#lobbySpeed .active');
+            return parseInt(active ? active.dataset.speed : '130', 10);
+        }
+
+        function getSkin() {
+            const active = document.querySelector('#skinGrid .active');
+            return active ? active.dataset.skin : 'green';
+        }
+
+        function startLoop() {
+            clearInterval(gameLoop);
+            if (!paused && !gameOver && !won) {
+                gameLoop = setInterval(tick, speed);
+            }
+        }
+
+        function goToLobby() {
+            clearInterval(gameLoop);
+            gameOver = true;
+            won = false;
+            paused = false;
+            winMessage.classList.remove('show');
+            loseMessage.classList.remove('show');
+            pauseMessage.classList.remove('show');
+            pauseBtn.style.display = 'none';
+            gameArea.classList.remove('show');
+            lobby.style.display = 'flex';
+        }
+
+        function startGame() {
+            skin = getSkin();
+            speed = getSpeed();
+
+            snake = [
+                { x: 7, y: 8 },
+                { x: 6, y: 8 },
+                { x: 5, y: 8 },
+            ];
+            direction = { x: 1, y: 0 };
+            nextDirection = { x: 1, y: 0 };
+            score = 0;
+            gameOver = false;
+            won = false;
+            paused = false;
+
+            winMessage.classList.remove('show');
+            loseMessage.classList.remove('show');
+            pauseMessage.classList.remove('show');
+            scoreSpan.textContent = '0';
+
+            lobby.style.display = 'none';
+            pauseBtn.style.display = 'flex';
+            gameArea.classList.add('show');
+
+            placeFood();
+            draw();
+            startLoop();
+        }
+
+        function placeFood() {
+            const occupied = new Set(snake.map(s => `${s.x},${s.y}`));
+            const free = [];
+            for (let i = 0; i < GRID; i++) {
+                for (let j = 0; j < GRID; j++) {
+                    if (!occupied.has(`${i},${j}`)) free.push({ x: i, y: j });
+                }
+            }
+            if (free.length === 0) {
+                won = true;
+                clearInterval(gameLoop);
+                winScore.textContent = score;
+                winMessage.classList.add('show');
+                return;
+            }
+            food = free[Math.floor(Math.random() * free.length)];
+        }
+
+        function tick() {
+            if (gameOver || won || paused) return;
+            direction = { ...nextDirection };
+
+            const head = snake[0];
+            const newHead = {
+                x: head.x + direction.x,
+                y: head.y + direction.y
+            };
+
+            if (newHead.x < 0 || newHead.x >= GRID || newHead.y < 0 || newHead.y >= GRID) {
+                endGame();
+                return;
+            }
+
+            const hitSelf = snake.some(s => s.x === newHead.x && s.y === newHead.y);
+            if (hitSelf) {
+                endGame();
+                return;
+            }
+
+            snake.unshift(newHead);
+
+            if (newHead.x === food.x && newHead.y === food.y) {
+                score++;
+                scoreSpan.textContent = score;
+                placeFood();
+                if (won) return;
+            } else {
+                snake.pop();
+            }
+
+            draw();
+        }
+
+        function endGame() {
+            gameOver = true;
+            clearInterval(gameLoop);
+            loseScore.textContent = score;
+            loseMessage.classList.add('show');
+        }
+
+        function togglePause() {
+            if (gameOver || won) return;
+            paused = !paused;
+            if (paused) {
+                clearInterval(gameLoop);
+                pauseMessage.classList.add('show');
+            } else {
+                pauseMessage.classList.remove('show');
+                startLoop();
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, SIZE, SIZE);
+
+            for (let i = 0; i < GRID; i++) {
+                for (let j = 0; j < GRID; j++) {
+                    ctx.fillStyle = (i + j) % 2 === 0 ? '#0f3460' : '#122d52';
+                    ctx.fillRect(i * CELL, j * CELL, CELL, CELL);
+                }
+            }
+
+            const s = SKINS[skin] || SKINS.green;
+
+            snake.forEach((seg, idx) => {
+                const color = idx === 0 ? s.head : s.body;
+                ctx.fillStyle = color;
+                ctx.shadowColor = idx === 0 ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.05)';
+                ctx.shadowBlur = idx === 0 ? 8 : 4;
+                const pad = 1;
+                ctx.beginPath();
+                ctx.roundRect(seg.x * CELL + pad, seg.y * CELL + pad, CELL - pad * 2, CELL - pad * 2, idx === 0 ? 6 : 4);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                if (idx === 0) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+                    ctx.beginPath();
+                    ctx.arc(seg.x * CELL + CELL * 0.35, seg.y * CELL + CELL * 0.35, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.arc(seg.x * CELL + CELL * 0.65, seg.y * CELL + CELL * 0.35, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            });
+
+            if (food) {
+                ctx.shadowColor = 'rgba(231,76,60,0.6)';
+                ctx.shadowBlur = 10;
+                ctx.fillStyle = '#e74c3c';
+                ctx.beginPath();
+                ctx.arc(food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, CELL / 2 - 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#c0392b';
+                ctx.beginPath();
+                ctx.arc(food.x * CELL + CELL / 2 - 2, food.y * CELL + CELL / 2 - 2, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = '#27ae60';
+                ctx.beginPath();
+                ctx.ellipse(food.x * CELL + CELL / 2 + 2, food.y * CELL + CELL / 2 - CELL / 2 + 4, 4, 6, 0.3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function setDirection(dx, dy) {
+            if (dx === -direction.x && dy === -direction.y) return;
+            nextDirection = { x: dx, y: dy };
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && gameArea.classList.contains('show')) {
+                togglePause();
+                return;
+            }
+            if (e.key === ' ' && gameArea.classList.contains('show')) {
+                e.preventDefault();
+                togglePause();
+                return;
+            }
+            const map = {
+                ArrowUp:    { x: 0, y: -1 },
+                ArrowDown:  { x: 0, y: 1 },
+                ArrowLeft:  { x: -1, y: 0 },
+                ArrowRight: { x: 1, y: 0 },
+                w: { x: 0, y: -1 },
+                s: { x: 0, y: 1 },
+                a: { x: -1, y: 0 },
+                d: { x: 1, y: 0 },
+            };
+            const d = map[e.key];
+            if (d) {
+                e.preventDefault();
+                setDirection(d.x, d.y);
+            }
+        });
+
+        document.getElementById('btnUp').addEventListener('click', () => setDirection(0, -1));
+        document.getElementById('btnDown').addEventListener('click', () => setDirection(0, 1));
+        document.getElementById('btnLeft').addEventListener('click', () => setDirection(-1, 0));
+        document.getElementById('btnRight').addEventListener('click', () => setDirection(1, 0));
+
+        document.getElementById('playBtn').addEventListener('click', startGame);
+
+        document.getElementById('winLobby').addEventListener('click', goToLobby);
+        document.getElementById('loseLobby').addEventListener('click', goToLobby);
+        document.getElementById('pauseLobby').addEventListener('click', goToLobby);
+        document.getElementById('resumeBtn').addEventListener('click', togglePause);
+        pauseBtn.addEventListener('click', togglePause);
+
+        document.querySelectorAll('#skinGrid .skin-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#skinGrid .skin-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('#lobbySpeed button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#lobbySpeed button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+
+        canvas.addEventListener('touchstart', e => e.preventDefault());
+    })();
+</script>
+</body>
+</html>
